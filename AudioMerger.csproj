@@ -27,4 +27,19 @@
     <Resource Include="TrayIcon.png" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="main.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>main.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="main.settings">
+      <Generator>PublicSettingsSingleFileGenerator</Generator>
+      <LastGenOutput>main.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -35,15 +35,20 @@
                 <StackPanel Orientation="Vertical">
                     <TextBlock Text="Path to VoiceMeeter tape recorder:"/>
                     <TextBox MinWidth="150" Margin="0,5"
+                             Text="{Binding AppSettings.TapeRecorderPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                              ui:ControlHelper.PlaceholderText="\Documents\Voicemeeter"/>
                 </StackPanel>
                 <StackPanel Orientation="Vertical">
                     <TextBlock Text="Path to Audio Recorder"/>
-                    <TextBox MinWidth="150" Margin="0,5" ui:ControlHelper.PlaceholderText="\RECORD\VOICE"/>
+                    <TextBox MinWidth="150" Margin="0,5"
+                             Text="{Binding AppSettings.PhysicalRecorderPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             ui:ControlHelper.PlaceholderText="\RECORD\VOICE"/>
                 </StackPanel>
                 <StackPanel Orientation="Vertical">
                     <TextBlock Text="Path to collection folder"/>
-                    <TextBox MinWidth="150" Margin="0,5" ui:ControlHelper.PlaceholderText="\Record Project\"/>
+                    <TextBox MinWidth="150"
+                             Text="{Binding AppSettings.MergeTo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Margin="0,5" ui:ControlHelper.PlaceholderText="\Record Project\"/>
                 </StackPanel>
             </StackPanel>
             <StackPanel Grid.Row="1" Orientation="Horizontal">

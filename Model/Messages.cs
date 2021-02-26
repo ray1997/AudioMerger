@@ -11,4 +11,10 @@ namespace AudioMerger.Messages
 	}
 
 	public class ToggleSettingPane { }
+
+	public class SettingChanged
+	{
+		public object New;
+		public string Name;
+	}
 }

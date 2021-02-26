@@ -1,4 +1,5 @@
 ﻿using AudioMerger.Helper;
+using AudioMerger.Model;
 using GalaSoft.MvvmLight.Messaging;
 using System;
 using System.Collections.Generic;
@@ -29,5 +30,7 @@ namespace AudioMerger.ViewModel
 				Messenger.Default.Send(new Messages.ToggleSettingPane());
 			});
 		}
+
+		public Setting AppSettings { get; } = new Setting();
 	}
 }
