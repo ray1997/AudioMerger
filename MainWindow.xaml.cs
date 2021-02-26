@@ -1,4 +1,6 @@
-﻿using System;
+﻿using AudioMerger.ViewModel;
+using GalaSoft.MvvmLight.Messaging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,9 +22,16 @@ namespace AudioMerger
 	/// </summary>
 	public partial class MainWindow : Window
 	{
+		public MainWindowViewModel ViewModel { get; } = new MainWindowViewModel();
 		public MainWindow()
 		{
 			InitializeComponent();
+			DataContext = ViewModel;
+			Messenger.Default.Register<Messages.ToggleSettingPane>(this, m =>
+			{
+				settingsRow.Height = settingsRow.Height.IsAuto ? new GridLength(0, GridUnitType.Pixel) : GridLength.Auto;
+				showHideButton.Content = settingsRow.Height.IsAuto ? '\uE010' : '\uE115';
+			});
 		}
 	}
 }

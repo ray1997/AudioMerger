@@ -5,15 +5,32 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AudioMerger"
         mc:Ignorable="d"
+        x:Name="window"
         Title="Merger" Height="350" Width="400" 
-        xmlns:ui="http://schemas.modernwpf.com/2019"
+        xmlns:tb="http://www.hardcodet.net/taskbar"
+        xmlns:ui="http://schemas.modernwpf.com/2019" 
+        xmlns:converter="clr-namespace:AudioMerger.Converters"
         ui:WindowHelper.UseModernWindowStyle="True">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="booleanToVisibility"/>
+        <converter:OppositeConverter x:Key="oppositeConverter"/>
+        <ContextMenu x:Key="mainContext">
+            <MenuItem Header="Show" Command="{Binding ShowProgram}" FontWeight="Bold"/>
+            <MenuItem Header="Quit" Command="{Binding QuitProgram}"/>
+        </ContextMenu>
+    </Window.Resources>
     <ScrollViewer Padding="12">
         <Grid>
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" x:Name="settingsRow"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
+            <tb:TaskbarIcon x:Name="notifyIcon"
+                            ToolTipText="Audio Merger"
+                            ContextMenu="{StaticResource mainContext}"
+                            DoubleClickCommand="{Binding ShowProgram}"
+                            Visibility="{Binding Visibility, Converter={StaticResource oppositeConverter}, ElementName=window}" OpacityMask="#FFFB0000" MenuActivation="All"/>
             <StackPanel Orientation="Vertical">
                 <StackPanel Orientation="Vertical">
                     <TextBlock Text="Path to VoiceMeeter tape recorder:"/>
@@ -28,9 +45,20 @@
                     <TextBlock Text="Path to collection folder"/>
                     <TextBox MinWidth="150" Margin="0,5" ui:ControlHelper.PlaceholderText="\Record Project\"/>
                 </StackPanel>
-                <Button HorizontalAlignment="Left" Content="^ Hide setting"/>
             </StackPanel>
-            <ListView Grid.Row="1" Margin="0,5">
+            <StackPanel Grid.Row="1" Orientation="Horizontal">
+                <Button FontFamily="Segoe MDL2 Assets" 
+                        x:Name="showHideButton"
+                        Command="{Binding ToggleSettings}"
+                        Content="&#xE010;" ToolTipService.ToolTip="Hide"
+                        ToolTipService.Placement="Top"/>
+                <Button FontFamily="Segoe MDL2 Assets" 
+                        Content="&#xE741;" Margin="5,0" 
+                        Command="{Binding HideToTray}"
+                        ToolTipService.ToolTip="Minimize to tray" 
+                        ToolTipService.Placement="Top"/>
+            </StackPanel>
+            <ListView Grid.Row="2" Margin="0,5">
                 
             </ListView>
         </Grid>
