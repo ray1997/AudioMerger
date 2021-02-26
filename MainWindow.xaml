@@ -5,7 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AudioMerger"
         mc:Ignorable="d"
-        Title="Merger" Height="350" Width="400">
+        Title="Merger" Height="350" Width="400" 
+        xmlns:ui="http://schemas.modernwpf.com/2019"
+        ui:WindowHelper.UseModernWindowStyle="True">
     <ScrollViewer Padding="12">
         <Grid>
             <Grid.RowDefinitions>
@@ -15,19 +17,20 @@
             <StackPanel Orientation="Vertical">
                 <StackPanel Orientation="Vertical">
                     <TextBlock Text="Path to VoiceMeeter tape recorder:"/>
-                    <TextBox MinWidth="150" Margin="0,5"/>
+                    <TextBox MinWidth="150" Margin="0,5"
+                             ui:ControlHelper.PlaceholderText="\Documents\Voicemeeter"/>
                 </StackPanel>
                 <StackPanel Orientation="Vertical">
                     <TextBlock Text="Path to Audio Recorder"/>
-                    <TextBox MinWidth="150" Margin="0,5"/>
+                    <TextBox MinWidth="150" Margin="0,5" ui:ControlHelper.PlaceholderText="\RECORD\VOICE"/>
                 </StackPanel>
                 <StackPanel Orientation="Vertical">
                     <TextBlock Text="Path to collection folder"/>
-                    <TextBox MinWidth="150" Margin="0,5"/>
+                    <TextBox MinWidth="150" Margin="0,5" ui:ControlHelper.PlaceholderText="\Record Project\"/>
                 </StackPanel>
                 <Button HorizontalAlignment="Left" Content="^ Hide setting"/>
             </StackPanel>
-            <ListView Grid.Row="1">
+            <ListView Grid.Row="1" Margin="0,5">
                 
             </ListView>
         </Grid>
