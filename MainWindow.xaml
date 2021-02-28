@@ -70,6 +70,16 @@
                         Content="&#xE741;" Margin="5,0" 
                         Command="{Binding HideToTray}"
                         ToolTip="Minimize to tray"/>
+                <Button Margin="10,0,0,0"
+                        FontFamily="Segoe MDL2 Assets" 
+                        Content="&#xE102;"
+                        Command="{Binding StartCopying}"
+                        ToolTip="Begin copying"/>
+                <Button Margin="5,0,0,0"
+                        FontFamily="Segoe MDL2 Assets" 
+                        Content="&#xE15B;"
+                        Command="{Binding StopCopying}"
+                        ToolTip="Stop copy"/>
             </StackPanel>
             <ListView Grid.Row="2" Margin="0,5">
                 

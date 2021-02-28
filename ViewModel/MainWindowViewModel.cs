@@ -3,7 +3,11 @@ using AudioMerger.Model;
 using GalaSoft.MvvmLight.Messaging;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+using System.Timers;
 using System.Windows.Input;
 using Windows.UI.Xaml;
 
@@ -19,9 +23,13 @@ namespace AudioMerger.ViewModel
 		public ICommand SetVoiceMeeterTapePath { get; private set; }
 		public ICommand SetPhysicalRecorderPath { get; private set; }
 		public ICommand SetMergePath { get; private set; }
+		//
+		public ICommand StartCopying { get; private set; }
+		public ICommand StopCopying { get; private set; }
 
 		public MainWindowViewModel()
 		{
+			InitializeMover();
 			ShowProgram = new RelayCommand<RoutedEventArgs>((r) =>
 			{
 				App.Current.MainWindow.Show();
@@ -84,8 +92,168 @@ namespace AudioMerger.ViewModel
 					main.Default.MergeTo = dialog.SelectedPath;
 				}
 			});
+			//
+			StartCopying = new RelayCommand<RoutedEventArgs>((r) =>
+			{
+#if DEBUG
+				MovingFiles(null, null);
+#else
+				MainWorker.Start();
+#endif
+			});
+			StopCopying = new RelayCommand<RoutedEventArgs>((r) =>
+			{
+				MainWorker.Stop();
+			});
 		}
 
 		public Setting AppSettings { get; } = new Setting();
+
+#region Moving 
+		const string hashDB = "hashes.json";
+		public Timer MainWorker;
+
+		public void InitializeMover()
+		{
+#if DEBUG
+			MainWorker = new Timer(60000);//1 min
+#else
+			MainWorker = new Timer(main.Default.FileCheckFrequency);//1 min
+#endif
+			MainWorker.Elapsed += MovingFiles;
+		}
+
+		private void MovingFiles(object sender, ElapsedEventArgs e)
+		{
+			//Get hash database
+			if (Hashes is null)
+			{
+				if (!File.Exists(hashDB))
+				{
+					Hashes = new Dictionary<string, string>();
+				}
+				else
+				{
+					LoadHashDatabase();
+				}
+			}
+			//Check on merge directory
+			DirectoryInfo merge = new DirectoryInfo(main.Default.MergeTo);
+			UpdateHashList(merge);
+			//Check on VoiceMeeter tapes
+			DirectoryInfo tapes = new DirectoryInfo(main.Default.TapeRecorderPath);
+			foreach (var file in tapes.GetFiles())
+			{
+				if (file.Extension != ".mp3" || file.Extension != ".wav")
+					continue;
+				if (FileCheck.IsFileLocked(file))//Voice meeter is currently using it
+					continue;
+				var hash = Hash.File(file);
+				if (!Hashes.ContainsKey(hash))
+				{
+					//Move it to merge folder
+					file.CopyTo($"{file.CreationTime:yyyyMMdd-HHmm}-{file.Name}");
+				}
+			}
+			//Check on physical recorder
+			if (Directory.Exists(Path.GetPathRoot(main.Default.PhysicalRecorderPath)))
+			{
+				DirectoryInfo recorder = new DirectoryInfo(main.Default.PhysicalRecorderPath);
+				foreach (var file in recorder.GetFiles())
+				{
+					if (file.Extension != ".mp3" || file.Extension != ".wav")
+						continue;
+					var hash = Hash.File(file);
+					if (!Hashes.ContainsKey(hash))
+					{
+						file.CopyTo($"{file.CreationTime:yyyyMMdd-HHmm}-{file.Name}");
+					}
+				}
+			}
+			else
+			{
+				//TODO:Show an error that recorder is unplug from PC or no longer exist
+			}
+		}
+
+		/// <summary>
+		/// A dictionary of hash and filename
+		/// </summary>
+		public Dictionary<string, string> Hashes;
+
+		public void UpdateHashList(DirectoryInfo folder)
+		{
+			foreach (var file in folder.GetFiles())
+			{
+				if (file.Extension.ToLower() == ".mp3" || file.Extension.ToLower() == ".wav")
+				{
+					if (Hashes.ContainsKey(file.FullName))
+						continue;
+					//Hash file
+					Hashes.Add(file.FullName, "");
+					Task.Run(() =>
+					{
+						string hash = Hash.File(file);
+						Messenger.Default.Send(new Messages.HashFileInfo()
+						{
+							Filename = file.FullName,
+							Hash = hash
+						});
+					}).Await(() => 
+					{
+						Messenger.Default.Register<Messages.HashFileInfo>(this, m => 
+						{ 
+							Hashes[m.Filename] = m.Hash;
+							Messenger.Default.Unregister<Messages.HashFileInfo>(this);
+						});
+					});
+				}
+			}
+			//Save hash
+			Task.Run(() =>
+			{
+				while (Hashes.ContainsValue(""))
+				{
+					Messenger.Default.Send(new Messages.StillContainsEmpty() { IsStillEmpty = true });
+				}
+				if (!Hashes.ContainsValue(""))
+				{
+					Messenger.Default.Send(new Messages.StillContainsEmpty() { IsStillEmpty = false });
+				}
+			}).Await(() => 
+			{
+				Messenger.Default.Register<Messages.StillContainsEmpty>(this, m =>
+				{
+					if (!m.IsStillEmpty)
+					{
+						string json = JsonSerializer.Serialize(Hashes);
+						using (StreamWriter writer = new StreamWriter(GetPathToDatabase()))
+							writer.Write(json);
+					}
+					Messenger.Default.Unregister(this);
+				});
+			});
+		}
+
+		public void LoadHashDatabase()
+		{
+			if (File.Exists(GetPathToDatabase()))
+			{
+				var file = new FileInfo(GetPathToDatabase());
+				using (StreamReader reader = file.OpenText())
+				{
+					string json = reader.ReadToEnd();
+					Hashes = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+				}
+			}
+		}
+
+		public string GetPathToDatabase()
+		{
+			return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+				"AudioMerger",
+				hashDB);
+		}
+#endregion
 	}
 }

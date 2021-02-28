@@ -17,4 +17,15 @@ namespace AudioMerger.Messages
 		public object New;
 		public string Name;
 	}
+
+	public class HashFileInfo
+	{
+		public string Filename;
+		public string Hash;
+	}
+	
+	public class StillContainsEmpty
+	{
+		public bool IsStillEmpty;
+	}
 }
