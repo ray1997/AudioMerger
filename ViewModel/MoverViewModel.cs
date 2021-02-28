@@ -71,7 +71,7 @@ namespace AudioMerger.ViewModel
 
 		public void UpdateHashList(DirectoryInfo folder)
 		{
-			foreach (var file in merge.GetFiles())
+			foreach (var file in folder.GetFiles())
 			{
 				if (Hashes.ContainsValue(file))
 					continue;
