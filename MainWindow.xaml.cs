@@ -34,5 +34,10 @@ namespace AudioMerger
 				showHideButton.ToolTip = settingsRow.Height.IsAuto ? "Hide" : "Settings";
 			});
 		}
+
+		private void window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+		{
+			main.Default.Save();
+		}
 	}
 }

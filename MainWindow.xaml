@@ -10,7 +10,9 @@
         xmlns:tb="http://www.hardcodet.net/taskbar"
         xmlns:ui="http://schemas.modernwpf.com/2019" 
         xmlns:converter="clr-namespace:AudioMerger.Converters"
-        ui:WindowHelper.UseModernWindowStyle="True">
+        xmlns:p="clr-namespace:AudioMerger"
+        ui:WindowHelper.UseModernWindowStyle="True"
+        Closing="window_Closing">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="booleanToVisibility"/>
         <converter:OppositeConverter x:Key="oppositeConverter"/>
@@ -35,20 +37,26 @@
                 <StackPanel Orientation="Vertical">
                     <TextBlock Text="Path to VoiceMeeter tape recorder:"/>
                     <TextBox MinWidth="150" Margin="0,5"
-                             Text="{Binding AppSettings.TapeRecorderPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Text="{Binding Source={x:Static p:main.Default}, Path=TapeRecorderPath, Mode=TwoWay}"
                              ui:ControlHelper.PlaceholderText="\Documents\Voicemeeter"/>
+                    <Button Content="Browse..."
+                            Command="{Binding SetVoiceMeeterTapePath}"/>
                 </StackPanel>
-                <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Vertical" Margin="0,5">
                     <TextBlock Text="Path to Audio Recorder"/>
                     <TextBox MinWidth="150" Margin="0,5"
-                             Text="{Binding AppSettings.PhysicalRecorderPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Text="{Binding Source={x:Static p:main.Default}, Path=PhysicalRecorderPath, Mode=TwoWay}"
                              ui:ControlHelper.PlaceholderText="\RECORD\VOICE"/>
+                    <Button Content="Browse..."
+                            Command="{Binding SetPhysicalRecorderPath}"/>
                 </StackPanel>
-                <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Vertical" Margin="0,5">
                     <TextBlock Text="Path to collection folder"/>
                     <TextBox MinWidth="150"
-                             Text="{Binding AppSettings.MergeTo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Text="{Binding Source={x:Static p:main.Default}, Path=MergeTo, Mode=TwoWay}"
                              Margin="0,5" ui:ControlHelper.PlaceholderText="\Record Project\"/>
+                    <Button Content="Browse..."
+                            Command="{Binding SetMergePath}"/>
                 </StackPanel>
             </StackPanel>
             <StackPanel Grid.Row="1" Orientation="Horizontal">
