@@ -16,7 +16,7 @@ namespace AudioMerger.ViewModel
 		public Timer MainWorker;
 		public MoverViewModel()
 		{
-			MainWorker = new Timer(60000);//1 min
+			MainWorker = new Timer(main.Default.FileCheckFrequency);//1 min
 			MainWorker.Elapsed += MovingFiles;
 		}
 
@@ -36,17 +36,49 @@ namespace AudioMerger.ViewModel
 			}
 			//Check on merge directory
 			DirectoryInfo merge = new DirectoryInfo(main.Default.MergeTo);
-			
+			UpdateHashList(merge);
 			//Check on VoiceMeeter tapes
 			DirectoryInfo tapes = new DirectoryInfo(main.Default.TapeRecorderPath);
 			foreach (var file in tapes.GetFiles())
 			{
-				if (Hashes.ContainsValue(file))
-					continue;
+				var hash = PeekAndHash.PeekAndHashFile(file);
+				if (!Hashes.ContainsKey(hash))
+				{
+					//Move it to merge folder
+					file.CopyTo($"{file.CreationTime:yyyyMMdd-HHmm}-{file.Name}");
+				}
+			}
+			//Check on physical recorder
+			if (Directory.Exists(Path.GetPathRoot(main.Default.PhysicalRecorderPath)))
+			{
+				DirectoryInfo recorder = new DirectoryInfo(main.Default.PhysicalRecorderPath);
+				foreach (var file in recorder.GetFiles())
+				{
+					var hash = PeekAndHash.PeekAndHashFile(file);
+					if (!Hashes.ContainsKey(hash))
+					{
+						file.CopyTo($"{file.CreationTime:yyyyMMdd-HHmm}-{file.Name}");
+					}
+				}
+			}
+			else
+			{
+				//TODO:Show an error that recorder is unplug from PC or no longer exist
 			}
 		}
 
 		public Dictionary<string, FileInfo> Hashes;
+
+		public void UpdateHashList(DirectoryInfo folder)
+		{
+			foreach (var file in merge.GetFiles())
+			{
+				if (Hashes.ContainsValue(file))
+					continue;
+				//Hash file
+				Hashes.Add(PeekAndHash.PeekAndHashFile(file), file);
+			}
+		}
 
 		public void LoadHashDatabase()
 		{

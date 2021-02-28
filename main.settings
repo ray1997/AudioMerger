@@ -1,5 +1,5 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="AudioMerger" GeneratedClassName="App">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="AudioMerger" GeneratedClassName="main">
   <Profiles />
   <Settings>
     <Setting Name="TapeRecorderPath" Type="System.String" Scope="User">
@@ -10,6 +10,9 @@
     </Setting>
     <Setting Name="MergeTo" Type="System.String" Scope="User">
       <Value Profile="(Default)">\Record project</Value>
+    </Setting>
+    <Setting Name="FileCheckFrequency" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">60000</Value>
     </Setting>
   </Settings>
 </SettingsFile>
