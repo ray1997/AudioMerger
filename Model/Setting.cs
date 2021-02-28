@@ -4,55 +4,42 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Windows.Storage;
+using System.Linq;
+using GalaSoft.MvvmLight.Messaging;
 
 namespace AudioMerger.Model
 {
 	public class Setting : Observable
 	{
-		static ApplicationDataContainer currentContainer;
-		public T Get<T>(T defaultValue, [CallerMemberName]string name = null)
-		{
-			//TODO:Move these settings to 'main'
-			if (currentContainer is null)
-				currentContainer = ApplicationData.Current.LocalSettings;
-			if (!currentContainer.Values.ContainsKey(name))
-				currentContainer.Values.Add(name, defaultValue);
-			return (T)currentContainer.Values[name];
-		}
-
-		public void Set<T>(T value, [CallerMemberName] string name = null)
-		{
-			if (currentContainer is null)
-				currentContainer = ApplicationData.Current.LocalSettings;
-			if (currentContainer.Values.ContainsKey(name) && !Equals(currentContainer.Values[name], value))
-			{
-				OnPropertyChanged(name);
-			}
-			if (!currentContainer.Values.ContainsKey(name))
-			{
-				currentContainer.Values.Add(name, value);
-				OnPropertyChanged(name);
-			}
-			else
-				currentContainer.Values[name] = value;
-		}
-
 		public string TapeRecorderPath
 		{
-			get => Get("\\Tape");
-			set => Set(value);
+			get => main.Default.TapeRecorderPath;
+			set => main.Default.TapeRecorderPath = value;
 		}
 
 		public string PhysicalRecorderPath
 		{
-			get => Get("\\RECORD\\VOICE");
-			set => Set(value);
+			get => main.Default.PhysicalRecorderPath;
+			set => main.Default.PhysicalRecorderPath = value;
 		}
 
 		public string MergeTo
 		{
-			get => Get("\\Record project");
-			set => Set(value);
+			get => main.Default.MergeTo;
+			set => main.Default.MergeTo = value;
+		}
+
+		public Setting()
+		{
+			NotifyPropertiesChanged();
+		}
+
+		private void NotifyPropertiesChanged()
+		{
+			Messenger.Default.Register<Messages.SettingChanged>(this, m =>
+			{
+				OnPropertyChanged(m.Name);
+			});
 		}
 	}
 }

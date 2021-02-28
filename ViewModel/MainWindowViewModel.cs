@@ -14,6 +14,7 @@ namespace AudioMerger.ViewModel
 		public ICommand ShowProgram { get; private set; }
 		public ICommand HideToTray { get; private set; }
 		public ICommand ToggleSettings { get; private set; }
+		public ICommand QuitProgram { get; private set; }
 
 		public MainWindowViewModel()
 		{
@@ -28,6 +29,10 @@ namespace AudioMerger.ViewModel
 			ToggleSettings = new RelayCommand<RoutedEventArgs>((r) =>
 			{
 				Messenger.Default.Send(new Messages.ToggleSettingPane());
+			});
+			QuitProgram = new RelayCommand<RoutedEventArgs>((r) =>
+			{
+				Environment.Exit(68);
 			});
 		}
 

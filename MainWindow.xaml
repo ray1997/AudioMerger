@@ -55,13 +55,13 @@
                 <Button FontFamily="Segoe MDL2 Assets" 
                         x:Name="showHideButton"
                         Command="{Binding ToggleSettings}"
-                        Content="&#xE010;" ToolTipService.ToolTip="Hide"
+                        Content="&#xE010;"
+                        ToolTip="Hide"
                         ToolTipService.Placement="Top"/>
                 <Button FontFamily="Segoe MDL2 Assets" 
                         Content="&#xE741;" Margin="5,0" 
                         Command="{Binding HideToTray}"
-                        ToolTipService.ToolTip="Minimize to tray" 
-                        ToolTipService.Placement="Top"/>
+                        ToolTip="Minimize to tray"/>
             </StackPanel>
             <ListView Grid.Row="2" Margin="0,5">
                 

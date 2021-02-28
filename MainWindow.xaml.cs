@@ -31,6 +31,7 @@ namespace AudioMerger
 			{
 				settingsRow.Height = settingsRow.Height.IsAuto ? new GridLength(0, GridUnitType.Pixel) : GridLength.Auto;
 				showHideButton.Content = settingsRow.Height.IsAuto ? '\uE010' : '\uE115';
+				showHideButton.ToolTip = settingsRow.Height.IsAuto ? "Hide" : "Settings";
 			});
 		}
 	}
