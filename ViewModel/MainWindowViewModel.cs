@@ -3,6 +3,7 @@ using AudioMerger.Model;
 using GalaSoft.MvvmLight.Messaging;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
 using System.Text.Json;
@@ -10,6 +11,8 @@ using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Input;
 using Windows.UI.Xaml;
+using System.Linq;
+using System.Diagnostics;
 
 namespace AudioMerger.ViewModel
 {
@@ -30,6 +33,7 @@ namespace AudioMerger.ViewModel
 		public MainWindowViewModel()
 		{
 			InitializeMover();
+			RegisterLogMessage();
 			ShowProgram = new RelayCommand<RoutedEventArgs>((r) =>
 			{
 				App.Current.MainWindow.Show();
@@ -140,40 +144,10 @@ namespace AudioMerger.ViewModel
 			//Check on merge directory
 			DirectoryInfo merge = new DirectoryInfo(main.Default.MergeTo);
 			UpdateHashList(merge);
-			//Check on VoiceMeeter tapes
-			DirectoryInfo tapes = new DirectoryInfo(main.Default.TapeRecorderPath);
-			foreach (var file in tapes.GetFiles())
-			{
-				if (file.Extension != ".mp3" || file.Extension != ".wav")
-					continue;
-				if (FileCheck.IsFileLocked(file))//Voice meeter is currently using it
-					continue;
-				var hash = Hash.File(file);
-				if (!Hashes.ContainsKey(hash))
-				{
-					//Move it to merge folder
-					file.CopyTo($"{file.CreationTime:yyyyMMdd-HHmm}-{file.Name}");
-				}
-			}
-			//Check on physical recorder
-			if (Directory.Exists(Path.GetPathRoot(main.Default.PhysicalRecorderPath)))
-			{
-				DirectoryInfo recorder = new DirectoryInfo(main.Default.PhysicalRecorderPath);
-				foreach (var file in recorder.GetFiles())
-				{
-					if (file.Extension != ".mp3" || file.Extension != ".wav")
-						continue;
-					var hash = Hash.File(file);
-					if (!Hashes.ContainsKey(hash))
-					{
-						file.CopyTo($"{file.CreationTime:yyyyMMdd-HHmm}-{file.Name}");
-					}
-				}
-			}
-			else
-			{
-				//TODO:Show an error that recorder is unplug from PC or no longer exist
-			}
+#if DEBUG
+			if (Application.Current.DebugSettings != null)
+				return;
+#endif			
 		}
 
 		/// <summary>
@@ -229,10 +203,54 @@ namespace AudioMerger.ViewModel
 						string json = JsonSerializer.Serialize(Hashes);
 						using (StreamWriter writer = new StreamWriter(GetPathToDatabase()))
 							writer.Write(json);
+						//TODO: Run moving file next
+
 					}
 					Messenger.Default.Unregister(this);
 				});
 			});
+		}
+
+		public void MoveTapes()
+		{
+			//Check on VoiceMeeter tapes
+			DirectoryInfo tapes = new DirectoryInfo(main.Default.TapeRecorderPath);
+			foreach (var file in tapes.GetFiles())
+			{
+				if (file.Extension != ".mp3" || file.Extension != ".wav")
+					continue;
+				if (FileCheck.IsFileLocked(file))//Voice meeter is currently using it
+					continue;
+				var hash = Hash.File(file);
+				if (!Hashes.ContainsKey(hash))
+				{
+					//Move it to merge folder
+					file.CopyTo($"{file.CreationTime:yyyyMMdd-HHmm}-{file.Name}");
+				}
+			}			
+		}
+
+		public void MoveRecorder()
+		{
+			//Check on physical recorder
+			if (Directory.Exists(Path.GetPathRoot(main.Default.PhysicalRecorderPath)))
+			{
+				DirectoryInfo recorder = new DirectoryInfo(main.Default.PhysicalRecorderPath);
+				foreach (var file in recorder.GetFiles())
+				{
+					if (file.Extension != ".mp3" || file.Extension != ".wav")
+						continue;
+					var hash = Hash.File(file);
+					if (!Hashes.ContainsKey(hash))
+					{
+						file.CopyTo($"{file.CreationTime:yyyyMMdd-HHmm}-{file.Name}");
+					}
+				}
+			}
+			else
+			{
+				//TODO:Show an error that recorder is unplug from PC or no longer exist
+			}
 		}
 
 		public void LoadHashDatabase()
@@ -254,6 +272,34 @@ namespace AudioMerger.ViewModel
 				"AudioMerger",
 				hashDB);
 		}
-#endregion
+		#endregion
+		#region Logging 
+		ObservableCollection<Messages.ILog> logs;
+		public ObservableCollection<Messages.ILog> Logs
+		{
+			get => logs;
+			set => Set(ref logs, value);
+		}
+
+		public void RegisterLogMessage()
+		{
+			Messenger.Default.Register<Messages.InfoLog>(this, m =>
+			{
+				Logs.Insert(0, m);
+			});
+			Messenger.Default.Register<Messages.FileHashingInfoLog>(this, m =>
+			{
+				//Find existing file that still hashing and toggle it
+				var item = (Messages.FileHashingInfoLog)logs.FirstOrDefault(i => ((Messages.FileHashingInfoLog)i).Filename == m.Filename && !((Messages.FileHashingInfoLog)i).IsHashing);
+				if (item != null)
+				{
+					if (m.IsHashing)
+					{
+						(logs[logs.IndexOf(item)] as Messages.FileHashingInfoLog).IsHashing = true;
+					}
+				}
+			});
+		}
+		#endregion
 	}
 }
