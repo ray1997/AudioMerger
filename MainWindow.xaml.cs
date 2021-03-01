@@ -40,4 +40,19 @@ namespace AudioMerger
 			main.Default.Save();
 		}
 	}
+
+	public class LogTemplateSelector : DataTemplateSelector
+	{
+		public DataTemplate PlainText { get; set; }
+		public DataTemplate FileHashingState { get; set; }
+
+		public override DataTemplate SelectTemplate(object item, DependencyObject container)
+		{
+			return item switch
+			{
+				Messages.FileHashingInfoLog _ => FileHashingState,
+				_ => PlainText,
+			};
+		}
+	}
 }

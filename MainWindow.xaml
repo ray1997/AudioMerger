@@ -11,6 +11,7 @@
         xmlns:ui="http://schemas.modernwpf.com/2019" 
         xmlns:converter="clr-namespace:AudioMerger.Converters"
         xmlns:p="clr-namespace:AudioMerger"
+        xmlns:msg="clr-namespace:AudioMerger.Messages"
         ui:WindowHelper.UseModernWindowStyle="True"
         Closing="window_Closing">
     <Window.Resources>
@@ -20,6 +21,24 @@
             <MenuItem Header="Show" Command="{Binding ShowProgram}" FontWeight="Bold"/>
             <MenuItem Header="Quit" Command="{Binding QuitProgram}"/>
         </ContextMenu>
+        <DataTemplate DataType="{x:Type msg:InfoLog}" x:Key="plainTemplate">
+            <Grid>
+                <TextBlock Text="{Binding Message}"/>
+            </Grid>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type msg:FileHashingInfoLog}" x:Key="hashingTemplate">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <CheckBox Content="{Binding Filename, Mode=OneWay}" IsChecked="{Binding IsHashingFinish, Mode=OneWay}"/>
+                <TextBlock Text="{Binding Message, Mode=OneWay}" Grid.Row="1"/>
+            </Grid>
+        </DataTemplate>
+        <p:LogTemplateSelector x:Key="logsTemplate" 
+                               PlainText="{StaticResource plainTemplate}"
+                               FileHashingState="{StaticResource hashingTemplate}"/>
     </Window.Resources>
     <ScrollViewer Padding="12">
         <Grid>
@@ -81,7 +100,8 @@
                         Command="{Binding StopCopying}"
                         ToolTip="Stop copy"/>
             </StackPanel>
-            <ListView Grid.Row="2" Margin="0,5">
+            <ListView Grid.Row="2" Margin="0,5" ItemsSource="{Binding Logs}"
+                      ItemTemplateSelector="{StaticResource logsTemplate}">
                 
             </ListView>
         </Grid>
