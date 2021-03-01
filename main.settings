@@ -12,7 +12,7 @@
       <Value Profile="(Default)">\Record project</Value>
     </Setting>
     <Setting Name="FileCheckFrequency" Type="System.Double" Scope="User">
-      <Value Profile="(Default)">60000</Value>
+      <Value Profile="(Default)">300000</Value>
     </Setting>
   </Settings>
 </SettingsFile>

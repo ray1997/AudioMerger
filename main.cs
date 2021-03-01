@@ -1,4 +1,6 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
+using System;
+using System.IO;
 
 namespace AudioMerger {
     
@@ -11,6 +13,11 @@ namespace AudioMerger {
     public sealed partial class main {
         
         public main() {
+            //Get tape folder
+            if (TapeRecorderPath == "\\Tape")
+			{
+                TapeRecorderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "VoiceMeeter");
+			}
             // // To add event handlers for saving and changing settings, uncomment the lines below:
             //
             // this.SettingChanging += this.SettingChangingEventHandler;

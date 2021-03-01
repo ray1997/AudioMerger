@@ -61,7 +61,7 @@ namespace AudioMerger {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("60000")]
+        [global::System.Configuration.DefaultSettingValueAttribute("300000")]
         public double FileCheckFrequency {
             get {
                 return ((double)(this["FileCheckFrequency"]));

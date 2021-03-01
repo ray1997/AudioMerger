@@ -65,4 +65,10 @@ namespace AudioMerger.Messages
 			set => Set(ref _ish, value);
 		}
 	}
+
+	public class PopupRequest
+	{
+		public string Title;
+		public string Content;
+	}
 }

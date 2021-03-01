@@ -33,6 +33,15 @@ namespace AudioMerger
 				showHideButton.Content = settingsRow.Height.IsAuto ? '\uE010' : '\uE115';
 				showHideButton.ToolTip = settingsRow.Height.IsAuto ? "Hide" : "Settings";
 			});
+			Messenger.Default.Register<Messages.SettingChanged>(this, m =>
+			{
+				if (m.Name == nameof(main.FileCheckFrequency))
+					ViewModel.MainWorker.Interval = (double)m.New;
+			});
+			Messenger.Default.Register<Messages.PopupRequest>(this, m =>
+			{
+				notifyIcon.ShowBalloonTip(m.Title, m.Content, Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
+			});
 		}
 
 		private void window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

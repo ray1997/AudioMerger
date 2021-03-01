@@ -77,6 +77,10 @@
                     <Button Content="Browse..."
                             Command="{Binding SetMergePath}"/>
                 </StackPanel>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="Check frequency"/>
+                    <ui:NumberBox Text="{Binding Source={x:Static p:main.Default}, Path=FileCheckFrequency, Mode=TwoWay}"/>
+                </StackPanel>
             </StackPanel>
             <StackPanel Grid.Row="1" Orientation="Horizontal">
                 <Button FontFamily="Segoe MDL2 Assets" 
@@ -101,9 +105,7 @@
                         ToolTip="Stop copy"/>
             </StackPanel>
             <ListView Grid.Row="2" Margin="0,5" ItemsSource="{Binding Logs}"
-                      ItemTemplateSelector="{StaticResource logsTemplate}">
-                
-            </ListView>
+                      ItemTemplateSelector="{StaticResource logsTemplate}"/>
         </Grid>
     </ScrollViewer>
 </Window>

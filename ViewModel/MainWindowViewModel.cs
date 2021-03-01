@@ -1,5 +1,4 @@
 ﻿using AudioMerger.Helper;
-using AudioMerger.Model;
 using GalaSoft.MvvmLight.Messaging;
 using System;
 using System.Collections.Generic;
@@ -106,15 +105,16 @@ namespace AudioMerger.ViewModel
 				MovingFiles(null, null);
 #else
 				MainWorker.Start();
+				Messenger.Default.Send(new InfoLog("Start file monitoring and moving"));
+				MovingFiles(null, null);
 #endif
 			});
 			StopCopying = new RelayCommand<RoutedEventArgs>((r) =>
 			{
 				MainWorker.Stop();
+				Messenger.Default.Send(new InfoLog("Stop file monitoring and moving"));
 			});
 		}
-
-		public Setting AppSettings { get; } = new Setting();
 
 #region Moving 
 		const string hashDB = "hashes.json";
@@ -130,8 +130,11 @@ namespace AudioMerger.ViewModel
 			MainWorker.Elapsed += MovingFiles;
 		}
 
+		DateTime currentSessionBegin;
 		private void MovingFiles(object sender, ElapsedEventArgs e)
 		{
+			currentSessionBegin = DateTime.Now;
+			Messenger.Default.Send(new InfoLog($"Start checking for files to move at {currentSessionBegin:dd MMMM yyyy HH:mm}"));
 			//Get hash database
 			if (Hashes is null)
 			{
@@ -252,12 +255,28 @@ namespace AudioMerger.ViewModel
 					{
 						WriteIndented = true
 					});
-					using (StreamWriter writer = new StreamWriter(GetPathToDatabase()))
+					using (StreamWriter writer = new StreamWriter(hashDB))
 						writer.Write(json);
 					Messenger.Default.Send(new InfoLog("Saving all hash files to log succesfully!"));
 					//TODO: Run moving file next
+					MoveTapes().Await();
+					MoveRecorder().Await();
+					Task.Run(() => {
+						DateTime finished = DateTime.Now;
+						Messenger.Default.Send(new InfoLog($"Finish moving all files to merge directory at {finished:dd MMMM yyyy HH:mm}"));
+						Messenger.Default.Send(new InfoLog($"Took {finished - currentSessionBegin:h'h 'm'm 's's'}"));
+						DateTime nextExpectedSession = currentSessionBegin + TimeSpan.FromMilliseconds(main.Default.FileCheckFrequency);
+						Messenger.Default.Send(new InfoLog($"Next session expect to start at {nextExpectedSession:dd MMMM yyyy HH:mm} " +
+							$"({nextExpectedSession - DateTime.Now:h'h 'm'm 's's'})"));
+						Messenger.Default.Send(new PopupRequest()
+						{
+							Title = "Session finished",
+							Content = $"Current session finished in {finished - currentSessionBegin:h'h 'm'm 's's'}" +
+							$"\r\nNext session begin in {nextExpectedSession - DateTime.Now:h'h 'm'm 's's'}"
+						});
+					}).Await();
 				}
-			}); 			
+			});
 		}
 
 		private ThrottleDispatcher throttleDebugWrite = new ThrottleDispatcher(2000);
@@ -285,26 +304,31 @@ namespace AudioMerger.ViewModel
 				$"{filename}"));
 		}
 
-		public void MoveTapes()
+		public async Task MoveTapes()
 		{
 			//Check on VoiceMeeter tapes
 			DirectoryInfo tapes = new DirectoryInfo(main.Default.TapeRecorderPath);
 			foreach (var file in tapes.GetFiles())
 			{
-				if (file.Extension != ".mp3" || file.Extension != ".wav")
-					continue;
-				if (FileCheck.IsFileLocked(file))//Voice meeter is currently using it
-					continue;
-				var hash = Hash.File(file);
-				if (!Hashes.ContainsKey(hash))
+				if (file.Extension.ToLower() == ".mp3" || file.Extension.ToLower() == ".wav")
 				{
-					//Move it to merge folder
-					file.CopyTo($"{file.CreationTime:yyyyMMdd-HHmm}-{file.Name}");
+					if (FileCheck.IsFileLocked(file))//Voice meeter is currently using it
+						continue;
+					var hash = Hash.File(file);
+					if (!Hashes.ContainsKey(hash))
+					{
+						//Move it to merge folder
+						Messenger.Default.Send(new InfoLog($"Moving file from tape to {file.FullName} to merged folder"));
+						await Task.Run(() =>
+						{
+							file.MoveTo($"{file.CreationTime:yyyyMMdd-HHmm}-{file.Name}");
+						});
+					}
 				}
-			}			
+			}
 		}
 
-		public void MoveRecorder()
+		public async Task MoveRecorder()
 		{
 			//Check on physical recorder
 			if (Directory.Exists(Path.GetPathRoot(main.Default.PhysicalRecorderPath)))
@@ -312,26 +336,32 @@ namespace AudioMerger.ViewModel
 				DirectoryInfo recorder = new DirectoryInfo(main.Default.PhysicalRecorderPath);
 				foreach (var file in recorder.GetFiles())
 				{
-					if (file.Extension != ".mp3" || file.Extension != ".wav")
-						continue;
-					var hash = Hash.File(file);
-					if (!Hashes.ContainsKey(hash))
+					if (file.Extension.ToLower() == ".mp3" || file.Extension.ToLower() == ".wav")
 					{
-						file.CopyTo($"{file.CreationTime:yyyyMMdd-HHmm}-{file.Name}");
+						var hash = Hash.File(file);
+						if (!Hashes.ContainsKey(hash))
+						{
+							Messenger.Default.Send(new InfoLog($"Moving file from recorder to {file.FullName} to merged folder"));
+							await Task.Run(() =>
+							{
+								file.MoveTo($"{file.CreationTime:yyyyMMdd-HHmm}-{file.Name}");
+							});
+						}
 					}
 				}
 			}
 			else
 			{
 				//TODO:Show an error that recorder is unplug from PC or no longer exist
+				Messenger.Default.Send(new InfoLog($"{Path.GetPathRoot(main.Default.PhysicalRecorderPath)} currently not exist, please make sure device is plugged"));
 			}
 		}
 
 		public void LoadHashDatabase()
 		{
-			if (File.Exists(GetPathToDatabase()))
+			if (File.Exists(hashDB))
 			{
-				var file = new FileInfo(GetPathToDatabase());
+				var file = new FileInfo(hashDB);
 				using (StreamReader reader = file.OpenText())
 				{
 					string json = reader.ReadToEnd();
@@ -340,12 +370,6 @@ namespace AudioMerger.ViewModel
 			}
 		}
 
-		public string GetPathToDatabase()
-		{
-			return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-				"AudioMerger",
-				hashDB);
-		}
 		#endregion
 		#region Logging 
 		ObservableCollection<ILog> _logz;
